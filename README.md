@@ -1,4 +1,4 @@
-# Kafka to Azure Serveless Pool
+# Kafka2Azure: Stream Processing and Data Lake Integration
 
 ## Overview
 
@@ -196,8 +196,8 @@ Defines a custom logging filter to exclude specific messages.
 Provides a web interface for manual Kafka data consumption. Users can provide Kafka topic details and retrieve messages on demand. This app operates independently of the main data pipeline, enabling real-time, ad hoc data queries.
 
 
+![adhoc_run_dashboard](https://github.com/user-attachments/assets/beda64c8-912a-461d-81b6-01616c9dde4e)
 
-- 
 
 ## Configuration Files
 
