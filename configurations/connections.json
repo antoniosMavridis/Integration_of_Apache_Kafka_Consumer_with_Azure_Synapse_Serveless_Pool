@@ -1,0 +1,12 @@
+{
+    "bootstrap_servers": "your_kafka_bootstrap_servers",
+    "ssl_config": {
+        "ca": "../certifications/your_ca_file.pem",
+        "cert": "../certifications/your_sslcert.pem",
+        "key": "../certifications/your_rsa.pem"
+    },
+    "azure_storage_account_name": "your_azure_storage_account_name",
+    "azure_storage_account_key": "your_azure_storage_account_key",
+    "azure_filesystem_name": "your_azure_filesystem_name",
+    "schema_registry_url": "your_kafka_schema_registry_url"
+}
