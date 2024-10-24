@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual-Adhoc Kafka Consumer</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            padding: 40px;
+            background-color: #f4f7f9;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.75rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .btn-secondary,
+        .btn-danger {
+            margin-top: 10px;
+        }
+
+        .dynamic-field-row input {
+            width: calc(50% - 20px);
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .section-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #fafbfc;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .btn-primary {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-secondary,
+        .btn-danger,
+        .btn-primary {
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        .form-check-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+        }
+
+        .invalid-feedback {
+            color: #e74c3c;
+        }
+
+        .align-self-end {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="form-title">Manual-Adhoc Kafka Consumer</h2>
+
+            <form id="kafka-consumer-form" class="needs-validation" novalidate>
+                <!-- Topic Name and Group ID -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="topic_name" class="form-label">Topic Name</label>
+                        <input type="text" class="form-control" id="topic_name" name="topic_name"
+                            placeholder="Enter Kafka topic name" required>
+                        <div class="invalid-feedback">Please provide a valid topic name.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="group_id" class="form-label">Group ID</label>
+                        <input type="text" class="form-control" id="group_id" name="group_id"
+                            placeholder="Enter Group ID" required>
+                        <div class="invalid-feedback">Please provide a valid group ID.</div>
+                    </div>
+                </div>
+
+                <!-- Number of Messages and Reset Offsets -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="num_messages" class="form-label">Number of Messages</label>
+                        <input type="number" class="form-control" id="num_messages" name="num_messages"
+                            placeholder="Enter the number of messages to consume" min="1" required>
+                        <div class="invalid-feedback">Please provide a number greater than 0.</div>
+                    </div>
+                    <div class="col-md-6 align-self-end">
+                        <!-- Reset Offsets -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="reset_offsets" name="reset_offsets"
+                                value="true">
+                            <label class="form-check-label" for="reset_offsets">Reset Offsets</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Starting Offsets Section -->
+                <div class="section-card mb-4">
+                    <h5 class="section-title">Starting Offsets</h5>
+                    <div id="starting-offsets-container" class="dynamic-fields">
+                        <!-- Dynamic starting offsets fields will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="add-starting-offset">Add Starting
+                        Offset</button>
+                </div>
+
+                <!-- Offset Increment Section -->
+                <div class="section-card mb-4">
+                    <h5 class="section-title">Offset Increments</h5>
+                    <div id="offset-increment-container" class="dynamic-fields">
+                        <!-- Dynamic offset increment fields will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="add-offset-increment">Add Offset
+                        Increment</button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary">Start Consumer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Custom Script for Dynamic Fields and Validation -->
+    <script>
+        $(document).ready(function () {
+            let startingOffsetCounter = 0;
+            let offsetIncrementCounter = 0;
+
+            // Function to add new Starting Offset input row
+            function addStartingOffsetField() {
+                startingOffsetCounter++;
+                const newRow = `
+                <div class="dynamic-field-row" id="starting-offset-row-${startingOffsetCounter}">
+                    <input type="number" class="form-control d-inline-block" name="starting_offsets[${startingOffsetCounter}][partition]" placeholder="Partition" required>
+                    <input type="number" class="form-control d-inline-block" name="starting_offsets[${startingOffsetCounter}][offset]" placeholder="Offset" required>
+                    <button type="button" class="btn btn-danger remove-starting-offset" data-row-id="starting-offset-row-${startingOffsetCounter}">Remove</button>
+                </div>`;
+                $('#starting-offsets-container').append(newRow);
+            }
+
+            // Function to add new Offset Increment input row
+            function addOffsetIncrementField() {
+                offsetIncrementCounter++;
+                const newRow = `
+                <div class="dynamic-field-row" id="offset-increment-row-${offsetIncrementCounter}">
+                    <input type="number" class="form-control d-inline-block" name="offset_increment[${offsetIncrementCounter}][partition]" placeholder="Partition" required>
+                    <input type="number" class="form-control d-inline-block" name="offset_increment[${offsetIncrementCounter}][increment]" placeholder="Increment" required>
+                    <button type="button" class="btn btn-danger remove-offset-increment" data-row-id="offset-increment-row-${offsetIncrementCounter}">Remove</button>
+                </div>`;
+                $('#offset-increment-container').append(newRow);
+            }
+
+            // Event listener to add a new starting offset row
+            $('#add-starting-offset').click(function () {
+                addStartingOffsetField();
+            });
+
+            // Event listener to add a new offset increment row
+            $('#add-offset-increment').click(function () {
+                addOffsetIncrementField();
+            });
+
+            // Event delegation to handle removing starting offset rows
+            $('#starting-offsets-container').on('click', '.remove-starting-offset', function () {
+                const rowId = $(this).data('row-id');
+                $(`#${rowId}`).remove();
+            });
+
+            // Event delegation to handle removing offset increment rows
+            $('#offset-increment-container').on('click', '.remove-offset-increment', function () {
+                const rowId = $(this).data('row-id');
+                $(`#${rowId}`).remove();
+            });
+
+            // Form validation and submission
+            $('#kafka-consumer-form').on('submit', function (e) {
+                e.preventDefault();
+
+                // Perform validation
+                if (this.checkValidity() === false) {
+                    e.stopPropagation();
+                    $(this).addClass('was-validated');
+                    return;
+                }
+
+                // If the reset_offsets checkbox is unchecked, add a hidden input to submit a "false" value
+                if (!$('#reset_offsets').is(':checked')) {
+                    $('<input />').attr('type', 'hidden')
+                        .attr('name', 'reset_offsets')
+                        .attr('value', 'false')
+                        .appendTo('#kafka-consumer-form');
+                }
+
+                // Gather form data and send via AJAX
+                const formData = $(this).serialize();
+
+                $.ajax({
+                    url: '/start_consumers',
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        $('#kafka-consumer-form')[0].reset(); // Reset the form after success
+                        $('#kafka-consumer-form').removeClass('was-validated');
+                        $('#starting-offsets-container').empty();  // Clear dynamic fields after success
+                        $('#offset-increment-container').empty();  // Clear dynamic fields after success
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
