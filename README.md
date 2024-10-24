@@ -2,7 +2,8 @@
 
 ## Overview
 
-This application is designed to consume messages from Kafka topics, convert them into Parquet files, and upload them to Azure Data Lake. It is built to allow parallel consumption of multiple Kafka topics and customizable configurations.
+This application is designed to consume messages from Kafka topics, convert them into Parquet files, and upload them to Azure Data Lake. It is built to allow parallel consumption of multiple Kafka topics and customizable configurations. Additionally, the project includes a **Flask web interface** to manually fetch specific Kafka data on demand, independently of the main scheduled process.
+
 
 ### Key Components:
 
